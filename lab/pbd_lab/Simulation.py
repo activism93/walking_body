@@ -53,18 +53,20 @@ class PBDSimulation:
             # --------------------------------------------------
             # TODO (4-1): Generate Contacts
             # --------------------------------------------------
-            contacts = None   # TODO: Generate Contacts 
+            contacts = self.generate_contacts(collisions)   # TODO: Generate Contacts 
 
             # --------------------------------------------------
             # TODO (2): Integrate, Solve Constraints(Positions) and Update Velocities
             # - Place self.integrate(), self.solve_positions() and self.update_velocities() in right order
             # --------------------------------------------------
-            pass
+            self.integrate()
+            self.solve_positions(contacts)
+            self.update_velocities()
             
             # --------------------------------------------------
             # TODO (4-2) : Solve Velocities
             # --------------------------------------------------
-            pass
+            self.solve_velocities(contacts)
             
                     
     def check_collisions(self):
@@ -84,9 +86,9 @@ class PBDSimulation:
         # - Generate Ground Collision Constraints
         # --------------------------------------------------
         for obj in self.world.get_objects():
-            contact_vertices = []              # TODO: Find vertices in contact with the ground
+            contact_vertices = np.where(obj.curr_pos[:, 1] < 0)[0]  # TODO: Find vertices in contact with the ground
             for id in contact_vertices:
-                contacts.append(Constraint())  # TODO: Add Ground Collision Constraint
+                contacts.append(GroundCollisionConstraint(obj, id, compliance=self.collision_compliance))  # TODO: Add Ground Collision Constraint
             
         return contacts
     
@@ -97,8 +99,8 @@ class PBDSimulation:
         # --------------------------------------------------
         for obj in self.world.get_objects():
             obj.prev_pos = obj.curr_pos.copy()
-            obj.vel += 0       # TODO: Fill in velocity update equation
-            obj.curr_pos += 0  # TODO: Update position using velocity
+            obj.vel += self.gravity * self.h     # TODO: Fill in velocity update equation
+            obj.curr_pos += obj.vel * self.h  # TODO: Update position using velocity
             
 
     def solve_positions(self, contacts=None):        
@@ -117,9 +119,9 @@ class PBDSimulation:
         # - Update velocities of objects based on the current and previous positions
         # --------------------------------------------------
         for obj in self.world.get_objects():
-            continue
-            obj.vel = 0       # TODO: Fill in velocity update equation.
-              
+            # continue
+            obj.vel = (obj.curr_pos - obj.prev_pos) / self.h        # TODO: Fill in velocity update equation.
+        
         
     def solve_velocities(self, contacts):
         for contact in contacts:

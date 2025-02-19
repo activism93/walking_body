@@ -13,7 +13,7 @@ def initWorld(world, train_mode=False):
         world=world,
         gravity=(0, -9.8, 0),
         time_step=1/30,
-        substeps=2
+        substeps=4
         
     )
     
@@ -47,14 +47,34 @@ def initWorld(world, train_mode=False):
     #  |/      |/
     #  4-------5       
     # ---------------------------------
+    # cube1 = Cube(width=1.0, height=2.0, depth=1.0, positions=[0, 4.5, 0], rotation=[0, 0, 0], color=(1.0, 0.0, 0.0, 1.0))
+    # world.add_object(cube1)
+    # cube2 = Cube(width=1.0, height=2.0, depth=1.0, positions=[0, 2.5, 0], rotation=[0, 0, 0], color=(0.0, 1.0, 0.0, 1.0))
+    # world.add_object(cube2)
+    # cube3 = Cube(width=2.0, height=1.0, depth=1.0, positions=[0.5, 1.0, 0], rotation=[0, 0, 0], color=(0.2, 0.5, 0.84, 1.0))    
+    # world.add_object(cube3)
     
-    cube1 = Cube(width=1.0, height=2.0, depth=1.0, positions=[0, 4.5, 0], rotation=[0, 0, 0], color=(1.0, 0.0, 0.0, 1.0))
-    world.add_object(cube1)
-    cube2 = Cube(width=1.0, height=2.0, depth=1.0, positions=[0, 2.5, 0], rotation=[0, 0, 0], color=(0.0, 1.0, 0.0, 1.0))
-    world.add_object(cube2)
-    cube3 = Cube(width=2.0, height=1.0, depth=1.0, positions=[0.5, 1.0, 0], rotation=[0, 0, 0], color=(0.2, 0.5, 0.84, 1.0))    
-    world.add_object(cube3)
-    
+    # Torso (Upper Body)
+    torso = Cube(width=1.0, height=2.0, depth=1.0, positions=[0, 4.5, 0], rotation=[0, 0, 0], color=(1.0, 0.0, 0.0, 1.0))
+    world.add_object(torso)
+
+    # Upper Leg 1
+    upper_leg1 = Cube(width=1.0, height=2.0, depth=1.0, positions=[-0.75, 2.5, 0], rotation=[0, 0, 0], color=(0.0, 1.0, 0.0, 1.0))
+    world.add_object(upper_leg1)
+
+    # Upper Leg 2 (Newly added)
+    upper_leg2 = Cube(width=1.0, height=2.0, depth=1.0, positions=[0.75, 2.5, 0], rotation=[0, 0, 0], color=(0.0, 1.0, 0.0, 1.0))
+    world.add_object(upper_leg2)
+
+    # Lower Leg 1
+    lower_leg1 = Cube(width=1.0, height=1.0, depth=1.0, positions=[-0.75, 1.0, 0], rotation=[0, 0, 0], color=(0.2, 0.5, 0.84, 1.0))    
+    world.add_object(lower_leg1)
+
+    # Lower Leg 2 (Newly added)
+    lower_leg2 = Cube(width=1.0, height=1.0, depth=1.0, positions=[0.75, 1.0, 0], rotation=[0, 0, 0], color=(0.2, 0.5, 0.84, 1.0))    
+    world.add_object(lower_leg2)
+
+
     if not train_mode:
         cube4 = Cube(width=2.0, height=10.0, depth=30.0, positions=[19.0, 5+122.5, 0], rotation=[0, 0, 0], color=(0.3, 0.3, 0.3, 1.0))    
         cube4.restitution = 1.0
@@ -74,7 +94,7 @@ def initWorld(world, train_mode=False):
     # a. Attach Constraint
     # TODO (2) : Add Attach Constraints
     # ---------------------------------
-    world.simulation.add_constraint(AttachmentConstraint(cube1, 2, cube1.curr_pos[2], compliance=attach_comp))
+    # world.simulation.add_constraint(AttachmentConstraint(cube1, 2, cube1.curr_pos[2], compliance=attach_comp))
 
 
     # ---------------------------------
@@ -88,20 +108,59 @@ def initWorld(world, train_mode=False):
                 world.simulation.add_constraint(DistanceConstraint(cube, edge[0], cube, edge[1], rest_length, rigid_comp))
                 
     
-    # ---------------------------------
-    # c. Hinge Constraint
-    # TODO (5) : Connect Objects
-    # ---------------------------------
-    world.simulation.add_constraint(DistanceConstraint(cube1, 5, cube2, 6, rest_length=0.0, compliance=hinge_comp))
-    world.simulation.add_constraint(DistanceConstraint(cube1, 1, cube2, 2, rest_length=0.0, compliance=hinge_comp))
-    world.simulation.add_constraint(DistanceConstraint(cube2, 4, cube3, 7, rest_length=0.0, compliance=hinge_comp))
-    world.simulation.add_constraint(DistanceConstraint(cube2, 0, cube3, 3, rest_length=0.0, compliance=hinge_comp))
+
+    # Ensure the torso does not overlap with the legs
+    world.simulation.add_constraint(MinDistanceConstraint(torso, 3, upper_leg1, 0, min_length=0.5, compliance=0.00000001))
+    world.simulation.add_constraint(MinDistanceConstraint(torso, 3, upper_leg2, 0, min_length=0.5, compliance=0.00000001))
+
+    # Ensure upper legs do not collapse into lower legs
+    world.simulation.add_constraint(MinDistanceConstraint(upper_leg1, 7, lower_leg1, 4, min_length=0.3, compliance=0.00000001))
+    world.simulation.add_constraint(MinDistanceConstraint(upper_leg2, 7, lower_leg2, 4, min_length=0.3, compliance=0.00000001))
 
 
+
+    # ---------------------------------
+    # Hip Joint (Torso -> Upper Legs)
+    # ---------------------------------
+    world.simulation.add_constraint(DistanceConstraint(torso, 5, upper_leg1, 6, rest_length=0.0, compliance=hinge_comp))
+    world.simulation.add_constraint(DistanceConstraint(torso, 1, upper_leg1, 2, rest_length=0.0, compliance=hinge_comp))
+
+    world.simulation.add_constraint(DistanceConstraint(torso, 5, upper_leg2, 6, rest_length=0.0, compliance=hinge_comp))
+    world.simulation.add_constraint(DistanceConstraint(torso, 1, upper_leg2, 2, rest_length=0.0, compliance=hinge_comp))
+
+    # ---------------------------------
+    # Knee Joint (Upper Legs -> Lower Legs)
+    # ---------------------------------
+    world.simulation.add_constraint(DistanceConstraint(upper_leg1, 4, lower_leg1, 7, rest_length=0.0, compliance=hinge_comp))
+    world.simulation.add_constraint(DistanceConstraint(upper_leg1, 0, lower_leg1, 3, rest_length=0.0, compliance=hinge_comp))
+
+    world.simulation.add_constraint(DistanceConstraint(upper_leg2, 4, lower_leg2, 7, rest_length=0.0, compliance=hinge_comp))
+    world.simulation.add_constraint(DistanceConstraint(upper_leg2, 0, lower_leg2, 3, rest_length=0.0, compliance=hinge_comp))
 
     # -------------------------------
-    # d.  Joint limit constraint
-    # #--------------------------------
+    # Joint Limit Constraints (Prevent Overbending)
+    # -------------------------------
+    world.simulation.add_constraint(MinDistanceConstraint(upper_leg1, 6, lower_leg1, 5, min_length=1.5, compliance=hinge_comp))
+    world.simulation.add_constraint(MinDistanceConstraint(upper_leg1, 2, lower_leg1, 1, min_length=1.5, compliance=hinge_comp))
+
+    world.simulation.add_constraint(MinDistanceConstraint(upper_leg2, 6, lower_leg2, 5, min_length=1.5, compliance=hinge_comp))
+    world.simulation.add_constraint(MinDistanceConstraint(upper_leg2, 2, lower_leg2, 1, min_length=1.5, compliance=hinge_comp))
+
+
+    # # ---------------------------------
+    # # c. Hinge Constraint
+    # # TODO (5) : Connect Objects
+    # # ---------------------------------
+    # world.simulation.add_constraint(DistanceConstraint(cube1, 5, cube2, 6, rest_length=0.0, compliance=hinge_comp))
+    # world.simulation.add_constraint(DistanceConstraint(cube1, 1, cube2, 2, rest_length=0.0, compliance=hinge_comp))
+    # world.simulation.add_constraint(DistanceConstraint(cube2, 4, cube3, 7, rest_length=0.0, compliance=hinge_comp))
+    # world.simulation.add_constraint(DistanceConstraint(cube2, 0, cube3, 3, rest_length=0.0, compliance=hinge_comp))
+
+
+
+    # # -------------------------------
+    # # d.  Joint limit constraint
+    # # #--------------------------------
     # world.simulation.add_constraint(MinDistanceConstraint(cube1, 6, cube2, 5, min_length=3.0, compliance=hinge_comp))
     # world.simulation.add_constraint(MinDistanceConstraint(cube1, 2, cube2, 1, min_length=3.0, compliance=hinge_comp))
     

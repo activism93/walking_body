@@ -43,6 +43,19 @@ def main():
     # TODO (4) : Add edges for constraints
     # - (ADVANCED) Consider adding more edges!
     # -----------------------------
+    # for i in range(width):
+    #     for j in range(height):
+    #         if i < width - 1:
+    #             ps.edges.append((i * height + j, (i + 1) * height + j))  # 오른쪽 연결
+    #         if j < height - 1:
+    #             ps.edges.append((i * height + j, i * height + j + 1))  # 아래쪽 연결
+
+    #         # 대각선 연결 추가 (↘, ↙)
+    #         if i < width - 1 and j < height - 1:
+    #             ps.edges.append((i * height + j, (i + 1) * height + j + 1))  # ↘
+    #         if i < width - 1 and j > 0:
+    #             ps.edges.append((i * height + j, (i + 1) * height + j - 1))  # ↙
+
     for i in range(width):
         for j in range(height):
             if i < width - 1:
@@ -65,17 +78,17 @@ def main():
     # b. Spring - n-ary
     # TODO (4): Add Spring Force
     # -----------------------------    
-    k_s = 100
+    k_s = 50
     k_d = 2
     for i, j in ps.edges:
-        ps.add_force(Force()) # TODO : Add Spring Force
+        ps.add_force(Spring(ps.particles[i], ps.particles[j], k_s, k_d, spacing)) # TODO : Add Spring Force
     
     
     # -----------------------------
     # c. Drag - Velocity Dependent
     # TODO (Additional Forces): Add Drag Force
     # -----------------------------
-    # ps.add_force(Drag(k_drag=0.1))
+    ps.add_force(Drag(k_drag=0.1))
     
     
     

@@ -22,8 +22,7 @@ class Gravity(Force):
             # -----------------------------
             # TODO (3): Implement Gravity
             # -----------------------------
-            p.force += 0 # TODO : Implement Gravity
-        
+            p.force += p.mass * self.G
 
 class Spring(Force):
     def __init__(self, particle1, particle2,  k_s, k_d, l0):
@@ -41,16 +40,15 @@ class Spring(Force):
         x2 = self.p2.position
         
         l = x1 - x2
+        l_dot = self.p1.velocity - self.p2.velocity
         length = np.linalg.norm(l)
         if length < 1e-6:
             return
         
-        l_dot = 0  # TODO: Compute l_dot 
-        f = 0      # TODO: Compute force
-         
-        self.p1.force += f
-        self.p2.force += -f        
+        f = -(self.k_s * (length - self.l0) + self.k_d * np.dot(l_dot, l) / length) * l / length
         
+        self.p1.force += f
+        self.p2.force += -f
 
 class Mouse(Force):
     def __init__(self, particle, target, k_s=100, k_d=1.0):
@@ -71,11 +69,10 @@ class Mouse(Force):
         if length < 1e-6:
             return
          
-        l_dot = 0 # TODO : Compute l_dot
-        f = 0     # TODO: Compute force
+        l_dot = self.p.velocity
+        f = -(self.k_s * length + self.k_d * np.dot(l_dot, l) / length) * l / length
          
-        self.p.force += -f
-
+        self.p.force += -f        
 
 class Drag(Force):
     def __init__(self, k_drag=0.1):
@@ -86,4 +83,4 @@ class Drag(Force):
             # -----------------------
             # TODO (Various Forces): Implement Drag
             # -----------------------
-            p.force += 0
+            p.force += -self.k_drag * p.velocity

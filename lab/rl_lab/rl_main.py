@@ -23,7 +23,7 @@ from World import World, initWorld
 import yaml
 CONFIG_FILE = "config.yaml"
 import time
-USER_TORQUE_MODE = True
+USER_TORQUE_MODE = False #True 
 
 ## World having step_(action) attribute
 class World_(World):
@@ -47,19 +47,19 @@ class WorldEnv(gym.Env):
 
         self.world = world
         self.action_space = spaces.Box(low=-500.0, high=500.0, shape=(2,), dtype=np.float32)
-        self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(2,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(194,), dtype=np.float32)
         self.max_epi_steps = 300
         self.cur_epi_step = 0
 
-        cube1_center = self.compute_center_pos(0)
-        self.prev_cube1_center = cube1_center.copy()
+        torso_center = self.compute_center_pos(0)
+        self.prev_torso_center = torso_center.copy()
 
         self.acc_reward = 0.0
 
     def reset(self, seed=None, options=None):
         self.world.reset()
-        cube1_center = self.compute_center_pos(0)
-        self.prev_cube1_center = cube1_center.copy()
+        torso_center = self.compute_center_pos(0)
+        self.prev_torso_center = torso_center.copy()
         self.acc_reward = 0.0
 
         self.cur_epi_step = 0
@@ -75,15 +75,16 @@ class WorldEnv(gym.Env):
         # ---------------------------------
         # TODO : Implement reward function
         # ---------------------------------
-        cube1_center = self.compute_center_pos(0)
-        reward = cube1_center[0]
+        torso_center = self.compute_center_pos(0)
+        velocity = 10 * (torso_center[0] - self.prev_torso_center[0])
+        reward = velocity #torso_center[0] 
         self.world.renderer.acc_reward += reward
         return reward
     
     def is_terminal_state(self):
-        cube1_center = self.compute_center_pos(0)
+        torso_center = self.compute_center_pos(0)
         return False
-        #return cube1_center[1] < 2.5
+        # return torso_center[1] < 2.5
 
     def step(self, action):
         self.world.step_(self.action_scale*action)
@@ -93,8 +94,8 @@ class WorldEnv(gym.Env):
         reward = self.get_reward()
         self.acc_reward += reward
 
-        cube1_center = self.compute_center_pos(0)
-        self.prev_cube1_center = cube1_center.copy()
+        torso_center = self.compute_center_pos(0)
+        self.prev_torso_center = torso_center.copy()
 
         # trucated : check timeout
         truncated = self.cur_epi_step > self.max_epi_steps
@@ -107,9 +108,20 @@ class WorldEnv(gym.Env):
         # ---------------------------------
         # TODO : Implement observation function
         # ---------------------------------
-        cube1_center = self.compute_center_pos(0)
-        obs = [cube1_center[0]]
-        obs = np.append(obs, [cube1_center[1]])
+        torso_center = self.compute_center_pos(0)
+        obs = [torso_center[0] - self.prev_torso_center[0]]
+        obs = np.append(obs, [torso_center[1]])
+        #object의 cube 1, cube2, cube3의 vertex값을 다 집어넣음
+        obs = np.append(obs, (self.world.get_objects()[0].curr_pos-torso_center).flatten())
+        obs = np.append(obs, (self.world.get_objects()[1].curr_pos-torso_center).flatten())
+        obs = np.append(obs, (self.world.get_objects()[2].curr_pos-torso_center).flatten())
+        obs = np.append(obs, (self.world.get_objects()[3].curr_pos-torso_center).flatten())
+
+        obs = np.append(obs, self.world.get_objects()[0].vel.flatten())
+        obs = np.append(obs, self.world.get_objects()[1].vel.flatten())
+        obs = np.append(obs, self.world.get_objects()[2].vel.flatten())
+        obs = np.append(obs, self.world.get_objects()[3].vel.flatten())
+
 
         return np.array(obs, dtype=np.float32)
 

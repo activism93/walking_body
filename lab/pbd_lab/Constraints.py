@@ -35,9 +35,9 @@ class DistanceConstraint(Constraint):
         if length < 1e-6:
             return
         
-        C = 0    # TODO: C(x1, x2) = ||x1 - x2|| - rest_length
-        dC1 = 0  # TODO: dC/dx1 = (x1 - x2) / ||x1 - x2||
-        dC2 = 0  # TODO: dC/dx2 = (x2 - x1) / ||x1 - x2||
+        C = length - self.rest_length    # TODO: C(x1, x2) = ||x1 - x2|| - rest_length
+        dC1 = normal / length  # TODO: dC/dx1 = (x1 - x2) / ||x1 - x2||
+        dC2 = -dC1  # TODO: dC/dx2 = (x2 - x1) / ||x1 - x2||
         if abs(C) < 1e-6:
             return
         
@@ -46,8 +46,8 @@ class DistanceConstraint(Constraint):
         dlambda = - (C + alpha * self.lambda_) / (self.w1 + self.w2 + alpha)
         self.lambda_ += dlambda
 
-        dx1 = 0  # TODO: Compute update for x1
-        dx2 = 0  # TODO: Compute update for x2
+        dx1 = self.w1 * dlambda * dC1  # TODO: Compute update for x1
+        dx2 = self.w2 * dlambda * dC2  # TODO: Compute update for x2
         
         self.body1.curr_pos[self.id1] += dx1
         self.body2.curr_pos[self.id2] += dx2
@@ -68,8 +68,8 @@ class GroundCollisionConstraint(Constraint):
         # --------------------------------------------------
         x = self.body.curr_pos[self.i]
         
-        C = 0       # TODO: Compute constraint function
-        dC = 0      # TODO: Compute constraint gradient
+        C = x[1]       # TODO: Compute constraint function
+        dC = self.n      # TODO: Compute constraint gradient
         if C >= 0:  
             return
         
@@ -77,7 +77,7 @@ class GroundCollisionConstraint(Constraint):
         alpha = self.compliance / h / h
         dlambda = -C / (self.w + alpha)  
         
-        dx = 0      # TODO: Compute position correction
+        dx = dlambda * dC      # TODO: Compute position correction
         
         self.body.curr_pos[self.i] += dx  
 
@@ -90,10 +90,10 @@ class GroundCollisionConstraint(Constraint):
         k_f = self.body.friction
         k_r = self.body.restitution
         
-        v_n = 0    # TODO: Compute normal velocity
-        v_t = 0    # TODO: Compute tangential velocity
+        v_n = np.dot(v, self.n) * self.n    # TODO: Compute normal velocity
+        v_t = v - v_n    # TODO: Compute tangential velocity
         
-        self.body.vel[self.i] = 0  # TODO: Update velocity
+        self.body.vel[self.i] = - v_n * k_r + v_t * k_f  # TODO: Update velocity
           
 class AttachmentConstraint(Constraint):
     def __init__(self, body, id, anchor, compliance=0.0, lambda_=0.0):

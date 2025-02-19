@@ -16,6 +16,7 @@ class Particle:
         
         
     def clear_force(self):
+        
         self.force = np.array([0.0, 0.0], dtype=np.float32)
 
     def reset(self):
@@ -24,6 +25,7 @@ class Particle:
         self.clear_force()
     
     def is_attached(self):
+        
         return np.isinf(self.mass)
 
 class ParticleSystem:
@@ -166,7 +168,7 @@ class ParticleSystem:
             # -------------------------
             # TODO (5) : Generate Mouse Spring when Mouse is pressed
             # -------------------------
-            self.grab_force = None # TODO : Generate Mouse Force object when the mouse is pressed
+            self.grab_force = Mouse(self.grabbed_particle, mouse_pos) # TODO : Generate Mouse Force object when the mouse is pressed
             
             self.add_force(self.grab_force)
 

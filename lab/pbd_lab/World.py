@@ -47,8 +47,8 @@ def initWorld(world):
     #  |/      |/
     #  4-------5       
     # ---------------------------------
-    cube1 = None # TODO: Create Cube
-    # cube1 = Cube(width=1.0, height=2.0, depth=1.0, positions=[0, 4.5, 0], rotation=[0, 0, 0], color=(1.0, 0.0, 0.0, 1.0))
+
+    cube1 = Cube(width=1.0, height=2.0, depth=1.0, positions=[0, 4.5, 0], rotation=[0, 0, 0], color=(1.0, 0.0, 0.0, 1.0))
     world.add_object(cube1)
     
 
@@ -57,7 +57,7 @@ def initWorld(world):
     # =============================
     
     attach_comp = 0.00001
-    rigid_comp = 0.00000001
+    rigid_comp = 0.00000001  # 제약조건을 세게하고 싶으면 숫자를 더 줄여야함 이론상 0 이어야 하는데 0이면 터지는 경우가 있어 작게 설정해놓음
     hinge_comp = 0.000000
     world.simulation.collision_compliance = 0.00000001
 
@@ -75,8 +75,8 @@ def initWorld(world):
     for cube in world.get_objects():
         if cube is not None:
             for edge in cube.edges:
-                rest_length = 0                                # TODO: Compute rest length
-                world.simulation.add_constraint(Constraint())  # TODO: Add Distance Constraint
+                rest_length = np.linalg.norm(cube.vertices[edge[0]] - cube.vertices[edge[1]])                                # TODO: Compute rest length
+                world.simulation.add_constraint(DistanceConstraint(cube, edge[0], cube, edge[1], rest_length, rigid_comp))  # TODO: Add Distance Constraint
     
     # ---------------------------------
     # c. Hinge Constraint

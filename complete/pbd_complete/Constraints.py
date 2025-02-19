@@ -52,8 +52,6 @@ class DistanceConstraint(Constraint):
         self.body1.curr_pos[self.id1] += dx1
         self.body2.curr_pos[self.id2] += dx2        
 
-    
-
 class GroundCollisionConstraint(Constraint):
     def __init__(self, body, i, compliance=0.0):
         self.body = body

@@ -44,9 +44,9 @@ class Spring(Force):
         length = np.linalg.norm(l)
         if length < 1e-6:
             return
-         
+        
         f = -(self.k_s * (length - self.l0) + self.k_d * np.dot(l_dot, l) / length) * l / length
-         
+        
         self.p1.force += f
         self.p2.force += -f
 

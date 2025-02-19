@@ -11,9 +11,9 @@ class Euler(Integrator):
             # -------------------------------------
             # TODO (2): Implement Euler Integration
             # -------------------------------------
-            a = 0
-            p.position += 0 # TODO : Update position
-            p.velocity += 0 # TODO : Update velocity
+            a = p.force / p.mass
+            p.position += p.velocity * time_step
+            p.velocity += a * time_step
 
 class ImplicitEuler(Integrator):
     def solve(self, particle_system, time_step):

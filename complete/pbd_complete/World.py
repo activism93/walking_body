@@ -50,10 +50,10 @@ def initWorld(world):
     
     cube1 = Cube(width=1.0, height=2.0, depth=1.0, positions=[0, 4.5, 0], rotation=[0, 0, 0], color=(1.0, 0.0, 0.0, 1.0))
     world.add_object(cube1)
-    cube2 = Cube(width=1.0, height=2.0, depth=1.0, positions=[0, 2.5, 0], rotation=[0, 0, 0], color=(0.0, 1.0, 0.0, 1.0))
-    world.add_object(cube2)
-    cube3 = Cube(width=2.0, height=1.0, depth=1.0, positions=[0.5, 1.0, 0], rotation=[0, 0, 0], color=(0.2, 0.5, 0.84, 1.0))    
-    world.add_object(cube3)
+    # cube2 = Cube(width=1.0, height=2.0, depth=1.0, positions=[0, 2.5, 0], rotation=[0, 0, 0], color=(0.0, 1.0, 0.0, 1.0))
+    # world.add_object(cube2)
+    # cube3 = Cube(width=2.0, height=1.0, depth=1.0, positions=[0.5, 1.0, 0], rotation=[0, 0, 0], color=(0.2, 0.5, 0.84, 1.0))    
+    # world.add_object(cube3)
     
     # =============================
     # Generate Constraints
@@ -68,7 +68,7 @@ def initWorld(world):
     # a. Attach Constraint
     # TODO (2) : Add Attach Constraints
     # ---------------------------------
-    world.simulation.add_constraint(AttachmentConstraint(cube1, 2, cube1.curr_pos[2], compliance=attach_comp))
+    # world.simulation.add_constraint(AttachmentConstraint(cube1, 2, cube1.curr_pos[2], compliance=attach_comp))
 
 
     # ---------------------------------
@@ -86,10 +86,10 @@ def initWorld(world):
     # c. Hinge Constraint
     # TODO (5) : Connect Objects
     # ---------------------------------
-    world.simulation.add_constraint(DistanceConstraint(cube1, 5, cube2, 6, rest_length=0.0, compliance=hinge_comp))
-    world.simulation.add_constraint(DistanceConstraint(cube1, 1, cube2, 2, rest_length=0.0, compliance=hinge_comp))
-    world.simulation.add_constraint(DistanceConstraint(cube2, 4, cube3, 7, rest_length=0.0, compliance=hinge_comp))
-    world.simulation.add_constraint(DistanceConstraint(cube2, 0, cube3, 3, rest_length=0.0, compliance=hinge_comp))
+    # world.simulation.add_constraint(DistanceConstraint(cube1, 5, cube2, 6, rest_length=0.0, compliance=hinge_comp))
+    # world.simulation.add_constraint(DistanceConstraint(cube1, 1, cube2, 2, rest_length=0.0, compliance=hinge_comp))
+    # world.simulation.add_constraint(DistanceConstraint(cube2, 4, cube3, 7, rest_length=0.0, compliance=hinge_comp))
+    # world.simulation.add_constraint(DistanceConstraint(cube2, 0, cube3, 3, rest_length=0.0, compliance=hinge_comp))
     
 
     return world

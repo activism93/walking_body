@@ -1,5 +1,5 @@
 policy_kwargs:
-  std_init: 0.5
+  std_init: 0.2
   net_arch: [256, 128]
 
 ppo_kwargs:
@@ -11,4 +11,4 @@ ppo_kwargs:
   gamma: 0.99
 
 env:
-  action_scale: 500.0
+  action_scale: 2000.0
