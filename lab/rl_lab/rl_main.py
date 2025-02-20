@@ -47,7 +47,7 @@ class WorldEnv(gym.Env):
 
         self.world = world
         self.action_space = spaces.Box(low=-500.0, high=500.0, shape=(2,), dtype=np.float32)
-        self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(194,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(248,), dtype=np.float32)
         self.max_epi_steps = 300
         self.cur_epi_step = 0
 
@@ -77,7 +77,13 @@ class WorldEnv(gym.Env):
         # ---------------------------------
         torso_center = self.compute_center_pos(0)
         velocity = 10 * (torso_center[0] - self.prev_torso_center[0])
-        reward = velocity #torso_center[0] 
+
+        # ✅ Reward for staying at the correct height
+        torso_height_error = np.abs(torso_center[1] - 4.5)
+        stability_penalty = -0.5 * torso_height_error  # Larger penalty for deviating from walking height
+
+
+        reward = velocity + stability_penalty  #torso_center[0] 
         self.world.renderer.acc_reward += reward
         return reward
     
@@ -105,25 +111,39 @@ class WorldEnv(gym.Env):
         return obs, reward, terminated, truncated, info
 
     def get_obs(self):
-        # ---------------------------------
-        # TODO : Implement observation function
-        # ---------------------------------
-        torso_center = self.compute_center_pos(0)
-        obs = [torso_center[0] - self.prev_torso_center[0]]
-        obs = np.append(obs, [torso_center[1]])
-        #object의 cube 1, cube2, cube3의 vertex값을 다 집어넣음
-        obs = np.append(obs, (self.world.get_objects()[0].curr_pos-torso_center).flatten())
-        obs = np.append(obs, (self.world.get_objects()[1].curr_pos-torso_center).flatten())
-        obs = np.append(obs, (self.world.get_objects()[2].curr_pos-torso_center).flatten())
-        obs = np.append(obs, (self.world.get_objects()[3].curr_pos-torso_center).flatten())
+        torso_center = self.compute_center_pos(0)  
+        obs = [torso_center[0] - self.prev_torso_center[0]]  # X velocity of torso
+        obs = np.append(obs, [torso_center[1]])  # Torso height
 
-        obs = np.append(obs, self.world.get_objects()[0].vel.flatten())
-        obs = np.append(obs, self.world.get_objects()[1].vel.flatten())
-        obs = np.append(obs, self.world.get_objects()[2].vel.flatten())
-        obs = np.append(obs, self.world.get_objects()[3].vel.flatten())
+        # ✅ Lower leg positions (relative to torso)
+        lower_leg1_center = self.compute_center_pos(3)  
+        lower_leg2_center = self.compute_center_pos(4)  
+        obs = np.append(obs, (lower_leg1_center - torso_center))  
+        obs = np.append(obs, (lower_leg2_center - torso_center))  
 
+        # ✅ Restore cube positions (for better stability tracking)
+        for obj in self.world.get_objects():
+            obs = np.append(obs, (obj.curr_pos - torso_center).flatten())  
+
+        # ✅ Add velocities to help with stability learning
+        for obj in self.world.get_objects():
+            obs = np.append(obs, obj.vel.flatten())  
 
         return np.array(obs, dtype=np.float32)
+
+            
+        # obs = np.append(obs, (self.world.get_objects()[0].curr_pos-torso_center).flatten())
+        # obs = np.append(obs, (self.world.get_objects()[1].curr_pos-torso_center).flatten())
+        # obs = np.append(obs, (self.world.get_objects()[2].curr_pos-torso_center).flatten())
+        # obs = np.append(obs, (self.world.get_objects()[3].curr_pos-torso_center).flatten())
+
+        # obs = np.append(obs, self.world.get_objects()[0].vel.flatten())
+        # obs = np.append(obs, self.world.get_objects()[1].vel.flatten())
+        # obs = np.append(obs, self.world.get_objects()[2].vel.flatten())
+        # obs = np.append(obs, self.world.get_objects()[3].vel.flatten())
+
+
+        # return np.array(obs, dtype=np.float32)
 
 
 
@@ -174,7 +194,7 @@ def train(env, model, exp_name):
 
     checkpoint_callback = CheckpointCallback(save_freq=40000, save_path='./logs/'+exp_name, name_prefix='rl_model')
 
-    model.learn(total_timesteps=400000, callback=checkpoint_callback)
+    model.learn(total_timesteps=1600000, callback=checkpoint_callback)
     env.close()
 
 

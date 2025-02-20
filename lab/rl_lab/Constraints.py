@@ -55,47 +55,56 @@ class DistanceConstraint(Constraint):
     
 
 class GroundCollisionConstraint(Constraint):
-    def __init__(self, body, i, compliance=0.0):
+    def __init__(self, body, bottom_vertices, ground_level=0.0, compliance=0.00001):
+        """
+        Ensure only the bottom face of the lower leg touches the ground.
+
+        :param body: The lower leg object
+        :param bottom_vertices: List of vertex indices corresponding to the bottom face
+        :param ground_level: The height of the ground
+        :param compliance: Compliance parameter for soft constraints
+        """
         self.body = body
-        self.i = i
+        self.bottom_vertices = bottom_vertices if isinstance(bottom_vertices, list) else [bottom_vertices]
+        self.ground_level = ground_level
         self.w = self.body.inv_mass
-        
-        self.n = np.array([0, 1, 0], dtype=np.float32)
-        
+        self.n = np.array([0, 1, 0], dtype=np.float32)  # Ground normal vector
         self.compliance = compliance
-        
+
     def solve(self, h):
-        # --------------------------------------------------
-        # TODO (4-1) : Ground Collision Constraints
-        # --------------------------------------------------
-        x = self.body.curr_pos[self.i]
-        
-        C = x[1]
-        dC = self.n
-        if C >= 0:  
-            return
-        
-        # Make Constraint Soft!        
-        alpha = self.compliance / h / h
-        dlambda = -C / (self.w + alpha)  
-        
-        dx = dlambda * dC
-        
-        self.body.curr_pos[self.i] += dx  
+        for i in self.bottom_vertices:
+            if i >= len(self.body.curr_pos):  # ✅ Ensure index is within range
+                continue  
+
+            x = self.body.curr_pos[i].copy()  # ✅ Avoid modifying directly
+
+            # ✅ If already above ground, do nothing (let gravity act naturally)
+            if x[1] >= self.ground_level:
+                continue
+
+            # ✅ Apply a soft ground constraint instead of forcing it
+            C = x[1] - self.ground_level  
+            dC = self.n
+            alpha = self.compliance / h / h
+            dlambda = -C / (self.w + alpha)  
+            dx = dlambda * dC
+
+            # ✅ Adjust only the bottom face positions safely
+            self.body.curr_pos[i] += dx  
 
     
-    def solve_velocity(self):
-        # --------------------------------------------------
-        # TODO (4-2) : Friction and Restitution
-        # --------------------------------------------------
-        v = self.body.vel[self.i]
+def solve_velocity(self):
+    # ✅ Apply friction and restitution to all bottom vertices
+    for i in self.bottom_vertices:
+        v = self.body.vel[i]  # ✅ Now we correctly iterate over vertices
         k_f = self.body.friction
         k_r = self.body.restitution
-        
+
         v_n = np.dot(v, self.n) * self.n
         v_t = v - v_n
-        
-        self.body.vel[self.i] = - v_n * k_r + v_t * k_f      
+
+        self.body.vel[i] = - v_n * k_r + v_t * k_f  
+
         
     
 class AttachmentConstraint(Constraint):
@@ -140,6 +149,20 @@ class AttachmentConstraint(Constraint):
         super().reset()
         self.anchor = self.init_anchor.copy()
 
+class FixedHeightConstraint(Constraint):
+    """Keeps the object at a fixed height, allowing only horizontal movement."""
+    def __init__(self, body, fixed_height, compliance=0.00000001):
+        self.body = body
+        self.fixed_height = fixed_height
+        self.compliance = compliance
+
+    def solve(self, h):
+        avg_height = np.mean(self.body.curr_pos[:, 1])  # Compute the average height of the object
+        height_diff = avg_height - self.fixed_height
+
+        # Apply a correction to keep the torso at the target height
+        self.body.curr_pos[:, 1] -= height_diff * (1 - self.compliance)
+
 class MinDistanceConstraint(Constraint):
     def __init__(self, body1, id1, body2, id2, min_length, compliance=0.0, lambda_=0.0):
         self.body1 = body1
@@ -183,4 +206,3 @@ class MinDistanceConstraint(Constraint):
         self.body1.curr_pos[self.id1] += dx1
         self.body2.curr_pos[self.id2] += dx2        
 
-    

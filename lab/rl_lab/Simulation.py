@@ -185,16 +185,27 @@ class PBDSimulation:
         for collision in collisions:
             pass
         
+        bottom_face_vertices = [0, 1, 4, 5]
         # --------------------------------------------------
         # TODO (4-1) : Generate Ground Collision Constraints
         # - Find the vertices in contact with the ground
         # - Generate Ground Collision Constraints
         # --------------------------------------------------
-        for obj in self.world.get_objects():
-            contact_vertices = np.where(obj.curr_pos[:, 1] < 0)[0]
-            for id in contact_vertices:
-                contacts.append(GroundCollisionConstraint(obj, id, compliance=self.collision_compliance))
+        # for obj in self.world.get_objects():
+        #     contact_vertices = np.where(obj.curr_pos[:, 1] < 0)[0]
+        #     for id in contact_vertices:
+        #         contacts.append(GroundCollisionConstraint(obj, id, compliance=self.collision_compliance))
             
+        for obj in self.world.get_objects():
+            if obj in [self.world.get_objects()[3], self.world.get_objects()[4]]:  # ✅ Only lower legs
+                contact_vertices = [v for v in bottom_face_vertices if v < obj.curr_pos.shape[0] and obj.curr_pos[v, 1] < 0]
+
+                if isinstance(contact_vertices, int):  # ✅ Ensure it's a list
+                    contact_vertices = [contact_vertices]
+
+                if contact_vertices:  # ✅ Only add constraint if there are valid contacts
+                    contacts.append(GroundCollisionConstraint(obj, contact_vertices, compliance=self.collision_compliance))
+        
         return contacts
     
     def integrate(self):

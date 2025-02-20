@@ -11,4 +11,4 @@ ppo_kwargs:
   gamma: 0.99
 
 env:
-  action_scale: 2000.0
+  action_scale: 5000.0

@@ -89,6 +89,16 @@ def initWorld(world, train_mode=False):
     rigid_comp = 0.00000001
     hinge_comp = 0.000000
     world.simulation.collision_compliance = 0.00000001
+    # ✅ Define the bottom face vertices (Only the 4 bottom-most vertices of the cube)
+    bottom_face_vertices = [0, 1, 4, 5]
+
+    # ✅ Apply GroundCollisionConstraint to lower legs
+    world.simulation.add_constraint(GroundCollisionConstraint(lower_leg1, bottom_face_vertices))
+    world.simulation.add_constraint(GroundCollisionConstraint(lower_leg2, bottom_face_vertices))
+
+    world.simulation.add_constraint(MinDistanceConstraint(lower_leg1, 1, lower_leg2, 0, min_length=0.5, compliance=0.00001))
+    world.simulation.add_constraint(MinDistanceConstraint(lower_leg1, 4, lower_leg2, 5, min_length=0.5, compliance=0.00001))
+
 
     # ---------------------------------
     # a. Attach Constraint
@@ -118,6 +128,9 @@ def initWorld(world, train_mode=False):
     world.simulation.add_constraint(MinDistanceConstraint(upper_leg2, 7, lower_leg2, 4, min_length=0.3, compliance=0.00000001))
 
 
+    # world.simulation.add_constraint(FixedHeightConstraint(torso, fixed_height=4.5))
+    # world.simulation.add_constraint(FixedHeightConstraint(upper_leg1, fixed_height=3.0))
+    # world.simulation.add_constraint(FixedHeightConstraint(upper_leg2, fixed_height=3.0))
 
     # ---------------------------------
     # Hip Joint (Torso -> Upper Legs)
